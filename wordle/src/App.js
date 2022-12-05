@@ -35,9 +35,8 @@ function App() {
   const [gameover, setGameOver] = useState(false);
   const [gamewon, setGameWon] = useState(false);
 
-  console.log(word)
-  useEffect(() => {
-    if (word == null) return;
+  console.log(word);
+  useEffect(()=> {
     if (guesses.includes(word)) {
       setTimeout(() => {
         const arr = [...guesses];
@@ -54,9 +53,13 @@ function App() {
         setGuesses(arr);
         window.location.reload(false);
         return;
-      }, 1000)
+      }, 3000)
       setGameOver(!gameover);
     }
+  }, [guesses, word])
+
+  useEffect(() => {
+    if (word == null) return;
     const onPressKey = (event) => {
       const isLetter = event.key.match(/^[a-z]$/);
       setCurrGuess(prevGuess => {
@@ -78,7 +81,7 @@ function App() {
     window.addEventListener('keydown', onPressKey);
 
     return () => window.removeEventListener('keydown', onPressKey);
-  }, [word, guesses, gameover, gamewon])
+  }, [word, guesses, gameover, gamewon]);
 
   return (
     <>
