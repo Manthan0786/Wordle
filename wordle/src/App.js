@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 
-const word_length = 5
 function App() {
   const words = ["ALBUM", "HINGE", "MONEY", "SCRAP", "GAMER", "GLASS", "SCOUR", "BEING", "DELVE", "YIELD", "METAL", "TIPSY",
     "SLUNG", "FARCE", "GECKO", "SHINE", "CANNY", "MIDST", "BADGE", "HOMER", "TRAIN", "STORY", "HAIRY", "FORGO", "LARVA", "TRASH",
@@ -30,92 +29,92 @@ function App() {
     "BLUSH", "AWAKE", "HUMPH", "SISSY", "REBUT", "CIGAR"];
 
   const randomWord = words[Math.floor(Math.random() * words.length)];
-  const [solution, setSolution] = useState(randomWord.toLowerCase());
+  const [word] = useState(randomWord.toLowerCase());
   const [guesses, setGuesses] = useState(Array(6).fill(null));
   const [currGuess, setCurrGuess] = useState('');
-  const [isGameOver, setIsGameOver] = useState(false);
+  const [gameover, setGameOver] = useState(false);
+  const [gamewon, setGameWon] = useState(false);
 
+  console.log(word)
   useEffect(() => {
-    const handleType = (event) => {
-      const newGuesses = [...guesses];
-      if (isGameOver) {
+    if (word == null) return;
+    if (guesses.includes(word)) {
+      setTimeout(() => {
+        const arr = [...guesses];
+        arr.fill(null);
+        setGuesses(arr);
+        window.location.reload(false);
+      }, 3000)
+      setGameWon(!gamewon);
+    }
+    if (guesses[6 - 1] !== null && !guesses.includes(word)) {
+      setTimeout(() => {
+        const arr = [...guesses];
+        arr.fill(null);
+        setGuesses(arr);
+        window.location.reload(false);
         return;
-      }
-      
-      if (event.key === 'Enter') {
-        
-        if (currGuess.length !== 5) {
-          return
+      }, 1000)
+      setGameOver(!gameover);
+    }
+    const onPressKey = (event) => {
+      const isLetter = event.key.match(/^[a-z]$/);
+      setCurrGuess(prevGuess => {
+        if (event.key === 'Backspace') {
+          return prevGuess.slice(0, -1);
+        } else if (event.key === 'Enter' && prevGuess.length === 5) {
+          const guessIndex = guesses.findIndex(index => index === null)
+          const guessesCloned = [...guesses];
+          guessesCloned[guessIndex] = prevGuess;
+          setGuesses(guessesCloned);
+          return '';
         }
-        const isInArray = words.includes(currGuess.toUpperCase());
-        if( isInArray !== true) {
-          alert('Not in the list!');
-          setCurrGuess('');
+        if (prevGuess.length < 5 && isLetter) {
+          return prevGuess = prevGuess + event.key.toLowerCase();
         }
-        newGuesses[guesses.findIndex(val => val == null)] = currGuess;
-        setGuesses(newGuesses);
-        setCurrGuess('');
-        const isCorrect = solution === currGuess;
-        if (isCorrect) {
-          setIsGameOver(true);
-        }         
-        if (guesses[5] !== null) {
-          setCurrGuess('');
-        }
-        if (currGuess.length >= 5 ) {
-          return;
-        }
-      }
-
-      
-      if (event.key === 'Backspace') {
-        setCurrGuess(currGuess.slice(0, -1));
-        return;
-      }
-      const isLetter = event.key.match(/^[a-z]$/[1]) != null;
-      if (isLetter) {
-        setCurrGuess(oldGuess => oldGuess + event.key);
-      }
-  
+        return prevGuess;
+      })
     };
+    window.addEventListener('keydown', onPressKey);
 
-    window.addEventListener('keydown', handleType);
-    return () => window.removeEventListener('keydown', handleType);
-  }, [currGuess, isGameOver, solution, guesses]);
-
+    return () => window.removeEventListener('keydown', onPressKey);
+  }, [word, guesses, gameover, gamewon])
 
   return (
     <>
       <div className='heading'>
-        Wordle
+        <span>Wordle</span>
       </div>
-      <div className="board">
-        {
-          guesses.map((guess, i) => {
-            const isCurrGuess = i === guesses.findIndex(val => val == null);
-            return (
-              <Line guess={isCurrGuess ? currGuess : guess ?? ""}
-                isFinal={!isCurrGuess && guess != null} solution={solution} />
-            );
-          })
+      <div className='board'>
+        {guesses.map((guess, i) => {
+          const currGuessIndex = i === guesses.findIndex(val => val == null);
+          return (
+            <Line
+              key={i}
+              guess={currGuessIndex ? currGuess : guess ?? ""}
+              word={word}
+              isFinal={!currGuessIndex && guess !== null}
+            />
+          );
+        })
         }
+        <p>{ gameover ? 'Try Again' : null}</p>
+        { gamewon && <p>Congratulations, You Won!</p>}
       </div>
     </>
   );
 }
 
-function Line({ guess, isFinal, solution }) {
-
+function Line({ guess, word, isFinal }) {
   const tiles = [];
-
-  for (let i = 0; i < word_length; i++) {
+  for (let i = 0; i < 5; i++) {
     const char = guess[i];
     let className = 'tile';
     if (isFinal) {
-      if (char === solution[i]) {
+      if (char === word[i]) {
         className += ' correct';
       }
-      else if (solution.includes(char)) {
+      else if (word.includes(char)) {
         className += ' close';
       }
       else {
@@ -131,6 +130,5 @@ function Line({ guess, isFinal, solution }) {
   )
 }
 
+
 export default App;
-
-
